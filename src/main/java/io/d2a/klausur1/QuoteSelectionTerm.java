@@ -3,6 +3,7 @@ package io.d2a.klausur1;
 import io.d2a.ahpe.AhpeDialog;
 import io.d2a.ahpe.AhpeFile;
 import io.d2a.ahpe.AhpeMisc;
+import io.d2a.ahpe.AhpeThread;
 import io.d2a.swag.layouts.SBorder;
 
 import javax.swing.*;
@@ -11,6 +12,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class QuoteSelectionTerm extends JFrame {
@@ -27,7 +30,7 @@ public class QuoteSelectionTerm extends JFrame {
     private FakeTalkClient currentClient;
 
     // controls
-    private int availablePoints;
+    private AtomicInteger availablePoints;
     private boolean started = false;
 
     public QuoteSelectionTerm(final List<Quote> quotes, final int rows, final int cols)
@@ -61,6 +64,8 @@ public class QuoteSelectionTerm extends JFrame {
         // create buttons
         for (Quote quote : this.quotes) {
             final QuoteButton button = new QuoteButton(quote);
+            button.addActionListener(e -> this.handleQuoteClick(button));
+
             this.buttons.add(button);
             grid.add(button);
         }
@@ -104,7 +109,8 @@ public class QuoteSelectionTerm extends JFrame {
         AhpeDialog.info("Meldung", message);
         try {
             AhpeFile.appendLine(new File("fake-score.txt"), message);
-        } catch (final Exception ignored) {}
+        } catch (final Exception ignored) {
+        }
 
         if (quote.type().equals(selectedType)) {
             // correct answer
@@ -162,16 +168,28 @@ public class QuoteSelectionTerm extends JFrame {
     }
 
     private int getAvailablePoints() {
-        return this.availablePoints;
+        return this.availablePoints.get();
     }
 
     private void setAvailablePoints(final int newAvailablePoints) {
-        this.availablePoints = newAvailablePoints;
+        if (newAvailablePoints != this.availablePoints.get()) {
+            this.availablePoints.set(newAvailablePoints);
+        }
         this.pointsLabel.setText("Punkte: " + newAvailablePoints);
     }
 
     private void resetAvailablePoints() {
         this.setAvailablePoints(10);
+    }
+
+    private void handleQuoteClick(final QuoteButton button) {
+        this.currentClient.setQuote(button.getQuote());
+
+        AhpeThread.every(2, TimeUnit.SECONDS, (tick) -> {
+            final boolean result = this.availablePoints.decrementAndGet() <= 1;
+            this.setAvailablePoints(this.availablePoints.get());
+            return result;
+        });
     }
 
 }
