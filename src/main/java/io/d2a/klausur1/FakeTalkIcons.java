@@ -1,3 +1,5 @@
+package io.d2a.klausur1;
+
 import javax.swing.ImageIcon;
 
 /**
