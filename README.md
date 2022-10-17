@@ -1,5 +1,7 @@
 # Hinweis
 
+Die Lösung ist im `src`-Ordner.
+
 Falls die Maven Packages nicht korrekt von der JitPack-Repository geladen werden,
 kann der "io"-Ordner aus dem "packages"-Ordner in den "java" Ordner kopiert,
 und Maven (pom.xml) entfernt werden.
