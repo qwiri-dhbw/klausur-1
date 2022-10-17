@@ -87,6 +87,8 @@ public class QuoteTerm extends JFrame implements FakeTalkClient {
             // disable buttons
             this.shitButton.setEnabled(false);
             this.hotButton.setEnabled(false);
+            // clear quote
+            this.display.setText("");
             // send answer to term
             this.term.answerSelected(this, this.quote, type);
         };

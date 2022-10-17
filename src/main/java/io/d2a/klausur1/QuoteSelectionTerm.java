@@ -32,13 +32,16 @@ public class QuoteSelectionTerm extends JFrame {
     // controls
     private AtomicInteger availablePoints;
     private boolean started = false;
+    private boolean guessing = false;
 
     public QuoteSelectionTerm(final List<Quote> quotes, final int rows, final int cols)
             throws HeadlessException, FakeNewsException {
 
-        if (rows * cols < quotes.size()) {
+        if (rows * cols > quotes.size()) {
             throw new FakeNewsException("Provided quote catalog does not contain enough (hot|bull)shit!");
         }
+
+        this.availablePoints = new AtomicInteger();
 
         // select random quotes
         Collections.shuffle(quotes);
@@ -54,9 +57,6 @@ public class QuoteSelectionTerm extends JFrame {
         // initialize frame
         this.setTitle("FakeTalk");
 
-        // initialize available points ( + label )
-        this.resetAvailablePoints();
-
         // grid
         final JPanel grid = new JPanel();
         grid.setLayout(new GridLayout(rows, cols));
@@ -64,6 +64,7 @@ public class QuoteSelectionTerm extends JFrame {
         // create buttons
         for (Quote quote : this.quotes) {
             final QuoteButton button = new QuoteButton(quote);
+            button.setType(QuoteType.UNKNOWN);
             button.addActionListener(e -> this.handleQuoteClick(button));
 
             this.buttons.add(button);
@@ -77,6 +78,14 @@ public class QuoteSelectionTerm extends JFrame {
                 .bottom(this.pointsLabel)
         );
         AhpeMisc.visible(this, 10, 10);
+
+        // decrement points every 2 second
+        AhpeThread.every(2, TimeUnit.SECONDS, () -> {
+           if (!this.guessing) {
+               return;
+           }
+           this.setAvailablePoints(this.getAvailablePoints() - 1);
+        });
     }
 
     public void register(final FakeTalkClient client) {
@@ -104,6 +113,8 @@ public class QuoteSelectionTerm extends JFrame {
     }
 
     public void answerSelected(final FakeTalkClient client, final Quote quote, final QuoteType selectedType) {
+        this.guessing = false;
+
         // output dialog and write to file
         final String message = String.format("This quote is %s!%nFrom: %s", quote.type().getLabel(), quote.getCitation());
         AhpeDialog.info("Meldung", message);
@@ -119,8 +130,6 @@ public class QuoteSelectionTerm extends JFrame {
             // incorrect answer
             this.currentClient.addPoints(-this.getAvailablePoints());
         }
-
-        this.resetAvailablePoints();
 
         // update type for corresponding type
         this.buttons.stream()
@@ -160,7 +169,7 @@ public class QuoteSelectionTerm extends JFrame {
             this.currentClient = this.clients.get(0);
         } else {
             this.currentClient = this.clients.get(
-                    this.clients.indexOf(this.currentClient) + 1 % this.clients.size()
+                    (this.clients.indexOf(this.currentClient) + 1) % this.clients.size()
             );
         }
         // update label
@@ -183,13 +192,15 @@ public class QuoteSelectionTerm extends JFrame {
     }
 
     private void handleQuoteClick(final QuoteButton button) {
-        this.currentClient.setQuote(button.getQuote());
+        this.guessing = true;
 
-        AhpeThread.every(2, TimeUnit.SECONDS, (tick) -> {
-            final boolean result = this.availablePoints.decrementAndGet() <= 1;
-            this.setAvailablePoints(this.availablePoints.get());
-            return result;
-        });
+        // reset available points
+        this.resetAvailablePoints();
+
+        // disable all buttons
+        this.buttons.forEach(b -> b.setEnabled(false));
+        // set quote for client
+        this.currentClient.setQuote(button.getQuote());
     }
 
 }
