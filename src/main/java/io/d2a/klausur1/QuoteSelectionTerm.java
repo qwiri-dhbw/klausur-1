@@ -1,11 +1,13 @@
 package io.d2a.klausur1;
 
 import io.d2a.ahpe.AhpeDialog;
+import io.d2a.ahpe.AhpeFile;
 import io.d2a.ahpe.AhpeMisc;
 import io.d2a.swag.layouts.SBorder;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -97,9 +99,12 @@ public class QuoteSelectionTerm extends JFrame {
     }
 
     public void answerSelected(final FakeTalkClient client, final Quote quote, final QuoteType selectedType) {
-        // show "real" source
-        AhpeDialog.info("Meldung", String.format("This quote is %s!%nFrom: %s",
-                quote.type().getLabel(), quote.getCitation()));
+        // output dialog and write to file
+        final String message = String.format("This quote is %s!%nFrom: %s", quote.type().getLabel(), quote.getCitation());
+        AhpeDialog.info("Meldung", message);
+        try {
+            AhpeFile.appendLine(new File("fake-score.txt"), message);
+        } catch (final Exception ignored) {}
 
         if (quote.type().equals(selectedType)) {
             // correct answer

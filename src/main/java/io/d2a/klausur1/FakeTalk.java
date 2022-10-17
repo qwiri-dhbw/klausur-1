@@ -29,9 +29,11 @@ public class FakeTalk {
     private static List<Quote> loadQuotes(String fileName) {
         List<Quote> quotes = new LinkedList<>();
 
-        for (final String line : AhpeFile.readLines(new File(fileName))) {
-            quotes.add(FakeTalk.parseQuote(line));
-        }
+        try {
+            for (final String line : AhpeFile.readLines(new File(fileName))) {
+                quotes.add(FakeTalk.parseQuote(line));
+            }
+        } catch (final Exception ignored) { }
 
         return quotes;
     }
