@@ -1,6 +1,9 @@
 package io.d2a.klausur1;
 
+import io.d2a.ahpe.AhpeFile;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,14 +26,12 @@ public class FakeTalk {
         }
     }
 
-    private static List<Quote> loadQuotes(String filename) {
+    private static List<Quote> loadQuotes(String fileName) {
         List<Quote> quotes = new LinkedList<>();
 
-        // REPLACE THE CODE BELOW!
-        for (int i = 1; i <= 25; i++) {
-            quotes.add(FakeTalk.parseQuote(String.format("%b;Quote Text %d;John Doe;Head of Dummy-Data Department %d;Source Code, 17.10.2022;", i % 2 == 0, i, i)));
+        for (final String line : AhpeFile.readLines(new File(fileName))) {
+            quotes.add(FakeTalk.parseQuote(line));
         }
-        // REPLACE THE CODE ABOVE!
 
         return quotes;
     }
