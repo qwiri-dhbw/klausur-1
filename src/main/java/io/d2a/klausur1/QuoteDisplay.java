@@ -1,3 +1,5 @@
+package io.d2a.klausur1;
+
 import java.awt.Dimension;
 import java.awt.Insets;
 

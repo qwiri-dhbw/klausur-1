@@ -138,7 +138,7 @@ public class QuoteSelectionTerm extends JFrame {
 
         AhpeDialog.info("Game finished!", "Game finished. Score: " +
                 this.clients.stream()
-                        .map(this::mapClientToPoints)
+                        .map(FakeTalkClient::toString)
                         .collect(Collectors.joining(", "))
         );
     }
@@ -154,10 +154,6 @@ public class QuoteSelectionTerm extends JFrame {
         }
         // update label
         this.currentPlayerLabel.setText("Pick a quote: " + this.currentClient.getPlayerName());
-    }
-
-    private String mapClientToPoints(final FakeTalkClient client) {
-        return client.getPlayerName() + " (" + client.getPoints() + ")";
     }
 
     private int getAvailablePoints() {
