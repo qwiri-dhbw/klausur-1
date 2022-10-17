@@ -6,18 +6,39 @@ import io.d2a.swag.layouts.SBorder;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class QuoteTerm extends JFrame implements FakeTalkClient {
 
+    /**
+     * contains the players name
+     */
     private final String name;
+
+    /**
+     * contains a reference to {@link QuoteSelectionTerm}
+     */
     private final QuoteSelectionTerm term;
 
+    /**
+     * contains the current quote
+     */
     private Quote quote;
+
+    /**
+     * contains the players' points
+     */
     private int points;
 
+    /**
+     * quote display component.
+     */
     private final QuoteDisplay display;
+
+    /**
+     * points label
+     */
+    private final JLabel pointsLabel = new JLabel("0 Points", SwingConstants.CENTER);
 
     private final JButton shitButton = new SButton()
             .click(handle(QuoteType.BULLSHIT))
@@ -31,15 +52,19 @@ public class QuoteTerm extends JFrame implements FakeTalkClient {
             .disable()
             .build();
 
-    private final JLabel pointsLabel = new JLabel("0 Points");
-
     public QuoteTerm(final String name, final QuoteSelectionTerm term) throws HeadlessException {
         this.name = name;
         this.term = term;
 
         this.display = new QuoteDisplay();
 
+        // update title to match player name
         this.setTitle(name);
+
+        // make points bold
+        this.pointsLabel.setFont(this.pointsLabel.getFont().deriveFont(Font.BOLD));
+
+        // layout
         this.add(SBorder.create()
                 .top(this.display)
                 .center(SBorder.create()

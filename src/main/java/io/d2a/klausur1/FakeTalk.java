@@ -2,9 +2,7 @@ package io.d2a.klausur1;
 
 import io.d2a.ahpe.AhpeFile;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.List;
 

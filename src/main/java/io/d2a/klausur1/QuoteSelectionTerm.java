@@ -18,51 +18,71 @@ import java.util.stream.Collectors;
 
 public class QuoteSelectionTerm extends JFrame {
 
-    // components
+    /**
+     * top label: shows the current client
+     */
     private final JLabel currentPlayerLabel = new JLabel("Pick a quote: ", SwingConstants.CENTER);
-    private final JLabel pointsLabel = new JLabel("Points: 10", SwingConstants.CENTER);
 
-    // attributes
-    private final List<Quote> quotes;
-    private final List<QuoteButton> buttons;
+    /**
+     * bottom label: shows the current available point count
+     */
+    private final JLabel availablePointsLabel = new JLabel("Points: 10", SwingConstants.CENTER);
 
-    private final List<FakeTalkClient> clients;
+    /**
+     * contains the points available for a player to claim
+     */
+    private final AtomicInteger availablePoints = new AtomicInteger();
+
+    /**
+     * contains all buttons in the grid
+     */
+    private final List<QuoteButton> buttons = new ArrayList<>();
+
+    /**
+     * contains all available clients which registered using the
+     * {@link QuoteSelectionTerm#register(FakeTalkClient)} method.
+     */
+    private final List<FakeTalkClient> clients = new ArrayList<>();
+
+    /**
+     * reference to the current player
+     */
     private FakeTalkClient currentClient;
 
-    // controls
-    private AtomicInteger availablePoints;
+    /**
+     * indicates whether the round started
+     */
     private boolean started = false;
+
+    /**
+     * indicates if the current client has time to guess
+     */
     private boolean guessing = false;
 
     public QuoteSelectionTerm(final List<Quote> quotes, final int rows, final int cols)
             throws HeadlessException, FakeNewsException {
 
+        // check if there are enough quote to fill the grid
         if (rows * cols > quotes.size()) {
             throw new FakeNewsException("Provided quote catalog does not contain enough (hot|bull)shit!");
         }
 
-        this.availablePoints = new AtomicInteger();
-
-        // select random quotes
+        // select random {rows*cols} quotes
         Collections.shuffle(quotes);
-        this.quotes = quotes.subList(0, rows * cols);
-
-        this.buttons = new ArrayList<>();
-        this.clients = new ArrayList<>();
 
         // update local components
         this.currentPlayerLabel.setFont(this.currentPlayerLabel.getFont().deriveFont(Font.BOLD));
-        this.pointsLabel.setFont(this.pointsLabel.getFont().deriveFont(Font.BOLD));
+        this.availablePointsLabel.setFont(this.availablePointsLabel.getFont().deriveFont(Font.BOLD));
 
         // initialize frame
         this.setTitle("FakeTalk");
 
-        // grid
+        // create grid component with quotes
         final JPanel grid = new JPanel();
         grid.setLayout(new GridLayout(rows, cols));
 
         // create buttons
-        for (Quote quote : this.quotes) {
+        for (Quote quote : quotes.subList(0, rows * cols)) {
             final QuoteButton button = new QuoteButton(quote);
             button.setType(QuoteType.UNKNOWN);
             button.addActionListener(e -> this.handleQuoteClick(button));
@@ -75,16 +95,18 @@ public class QuoteSelectionTerm extends JFrame {
         this.add(SBorder.create()
                 .top(this.currentPlayerLabel)
                 .center(grid)
-                .bottom(this.pointsLabel)
+                .bottom(this.availablePointsLabel)
         );
         AhpeMisc.visible(this, 10, 10);
 
         // decrement points every 2 second
         AhpeThread.every(2, TimeUnit.SECONDS, () -> {
-           if (!this.guessing) {
-               return;
-           }
-           this.setAvailablePoints(this.getAvailablePoints() - 1);
+            if (!this.guessing) {
+                return;
+            }
+            if (this.getAvailablePoints() > 1) {
+                this.setAvailablePoints(this.getAvailablePoints() - 1);
+            }
         });
     }
 
@@ -117,10 +139,29 @@ public class QuoteSelectionTerm extends JFrame {
 
         // output dialog and write to file
         final String message = String.format("This quote is %s!%nFrom: %s", quote.type().getLabel(), quote.getCitation());
-        AhpeDialog.info("Meldung", message);
-        try {
-            AhpeFile.appendLine(new File("fake-score.txt"), message);
-        } catch (final Exception ignored) {
+
+        // Hinweis: zum Testen habe ich den Typ des Dialogs daran angepasst,
+        // ob die Antwort korrekt war.
+        // Falls nicht gewuenscht,einfach `enhancedDialog` auf `false` setzen :)
+        final boolean enhancedDialog = true;
+
+        if (!enhancedDialog) {
+            AhpeDialog.info("Meldung", message);
+        } else if (quote.type().equals(selectedType)) {
+            JOptionPane.showMessageDialog(
+                    null, message,
+                    "Richtig!",
+                    JOptionPane.INFORMATION_MESSAGE,
+                    quote.type().getIcon()
+            );
+        } else {
+            JOptionPane.showMessageDialog(
+                    null,
+                    message,
+                    "Falsch!",
+                    JOptionPane.WARNING_MESSAGE,
+                    quote.type().getIcon()
+            );
         }
 
         if (quote.type().equals(selectedType)) {
@@ -156,11 +197,19 @@ public class QuoteSelectionTerm extends JFrame {
     private void endGame() {
         this.started = false;
 
-        AhpeDialog.info("Game finished!", "Game finished. Score: " +
+        final String message = "Game finished. Score: " +
                 this.clients.stream()
                         .map(FakeTalkClient::toString)
-                        .collect(Collectors.joining(", "))
-        );
+                        .collect(Collectors.joining(", "));
+
+        // show game end dialog
+        AhpeDialog.info("Game finished!", message);
+
+        // write game end message to file
+        try {
+            AhpeFile.appendLine(new File("fake-score.txt"), message);
+        } catch (final Exception ignored) {
+        }
     }
 
     private void nextPlayer() {
@@ -184,7 +233,7 @@ public class QuoteSelectionTerm extends JFrame {
         if (newAvailablePoints != this.availablePoints.get()) {
             this.availablePoints.set(newAvailablePoints);
         }
-        this.pointsLabel.setText("Punkte: " + newAvailablePoints);
+        this.availablePointsLabel.setText("Punkte: " + newAvailablePoints);
     }
 
     private void resetAvailablePoints() {
