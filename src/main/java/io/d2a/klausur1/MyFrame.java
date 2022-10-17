@@ -1,4 +1,4 @@
-package io.d2a.klausur.k1;
+package io.d2a.klausur1;
 
 import io.d2a.ahpe.AhpeMisc;
 

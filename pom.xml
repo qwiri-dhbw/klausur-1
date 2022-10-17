@@ -22,12 +22,14 @@
     </repositories>
 
     <dependencies>
+        <!-- eeee -->
         <dependency>
             <groupId>com.github.darmiel</groupId>
             <artifactId>eeee</artifactId>
             <version>ea9c40fc01</version>
             <scope>compile</scope>
         </dependency>
+        <!-- swag / ahpe -->
         <dependency>
             <groupId>com.github.darmiel</groupId>
             <artifactId>swag</artifactId>
